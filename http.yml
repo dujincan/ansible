@@ -1,0 +1,20 @@
+# deploy http
+- hosts: test
+  tasks:
+  - name: install httpd
+    yum: pkg=httpd state=latest
+  - name: copy html config
+    copy: src=/home/html/index.html dest=/var/www/html/index.html owner=root mode=755
+  - name: start httpd
+    service: name=httpd state=started enabled=yes
+  - name: start firewalld
+    shell: systemctl start firewalld
+  - name: enable firewalld
+    shell: systemctl enable firewalld
+  - name: add http to firewalld
+    shell: firewall-cmd --permanent --add-service=http
+  - name: reload firewalld
+    shell: firewall-cmd --reload
+  handlers:
+  - name: restart httpd
+    service: name=httpd state=restarted
