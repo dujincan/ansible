@@ -1,0 +1,29 @@
+---
+- name: install mariadb
+  yum: name="{{item}}" state=present
+  with_items:
+    - mariadb
+    - mariadb-server
+    - expect
+- name: start mariadb
+  service: name=mariadb state=started enabled=yes
+- name: copy autochgpasswd
+  copy: src=/etc/ansible/roles/mariadb/tasks/autochgpasswd.exp dest=/tmp/autochgpasswd.exp mode=755
+- name: change root passwd
+  shell: /tmp/autochgpasswd.exp
+- name: copy sql file
+  copy: src=/etc/ansible/roles/mariadb/tasks/mariadb.sql dest=/tmp/mariadb.sql
+- name: copy importdb
+  copy: src=/etc/ansible/roles/mariadb/tasks/importdb.exp dest=/tmp/importdb.exp mode=755
+- name: import db
+  shell: /tmp/importdb.exp
+- name: restart mariadb
+  service: name=mariadb state=restarted
+- name: firewall
+  firewalld: port=3306/tcp permanent=true state=enabled
+- name: delete importdb
+  file: path=/tmp/importdb.exp state=absent
+- name: delete autochgpasswd
+  file: path=/tmp/autochgpasswd.exp state=absent
+- name: delete sqldb
+  file: path=/tmp/mariadb.sql state=absent
